@@ -90,8 +90,12 @@ public class BytecodeGenListenerHelper {
         String typeText = "";
 
         for (int i = 0; i < params.param().size(); i++) {
-            Type_specContext typespec = (Type_specContext) params.param(i).getChild(0);
-            typeText += getTypeText(typespec); // + ";";
+            if(isArrayParamDecl(params.param(i))){
+                typeText += "[I";
+            }else{
+                MiniCParser.Type_specContext typespec = (MiniCParser.Type_specContext) params.param(i).getChild(0);
+                typeText += getTypeText(typespec); // + ";";
+            }
         }
         return typeText;
     }

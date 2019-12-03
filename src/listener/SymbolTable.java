@@ -79,7 +79,11 @@ public class SymbolTable {
     void putParams(MiniCParser.ParamsContext params) { //params에서 param 리스트에 담긴 param을 테이블에 담는 함수
         for (int i = 0; i < params.param().size(); i++) {
             MiniCParser.ParamContext p = params.param(i);
-            putLocalVar(p.IDENT().getText(), getTypeObj(p.type_spec().getText()));
+            if(isArrayParamDecl(p)){
+                putLocalVar(p.IDENT().getText(), Type.INTARRAY);
+            }else{
+                putLocalVar(p.IDENT().getText(), getTypeObj(p.type_spec().getText()));
+            }
         }
     }
 

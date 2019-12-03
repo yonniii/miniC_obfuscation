@@ -193,8 +193,12 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
             String vId = symbolTable.getVarId(ctx);
             varDecl += "ldc " + ctx.LITERAL().getText() + "\n"
                     + "istore " + vId + "\n";
+        }else if(isArrayDecl(ctx)) {
+            String vId = symbolTable.getVarId(ctx);
+            varDecl += "ldc " + ctx.LITERAL().getText() + "\n"
+                    + "newarray int\n" +
+                    "astore " + vId + "\n";
         }
-
         newTexts.put(ctx, varDecl);
     }
 
@@ -275,6 +279,8 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
                     stacksize = Math.max(stacksize, tempstack);
                     tempstack = stacksize;
                     expr += "iload " + symbolTable.getVarId(idName) + " \n";
+                }else if(symbolTable.getVarType(idName) == Type.INTARRAY){
+                    expr += "aload " + symbolTable.getVarId(idName) + " \n";
                 }
                 //else	// Type int array => Later! skip now..
                 //	expr += "           lda " + symbolTable.get(ctx.IDENT().getText()).value + " \n";
@@ -311,15 +317,26 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
             if (ctx.args() != null) {        // function calls
                 expr = handleFunCall(ctx, expr);
             } else { // expr
-                // Arrays: TODO
+                expr = handleArray(ctx, expr);
+                expr+= "iaload\n";
             }
         }
         // IDENT '[' expr ']' '=' expr
         else { // Arrays: TODO			*/
+            expr = handleArray(ctx, expr)
+                    +newTexts.get(ctx.expr(1))
+                    +"iastore\n";
         }
         newTexts.put(ctx, expr);
     }
 
+    private String handleArray(MiniCParser.ExprContext ctx, String expr){
+        String index = newTexts.get(ctx.expr(0));
+        expr += "aload "+ symbolTable.getVarId(ctx.IDENT().getText())+"\n"
+                +index;
+
+        return expr;
+    }
 
     private String handleUnaryExpr(MiniCParser.ExprContext ctx, String expr) {
         String l1 = symbolTable.newLabel();
