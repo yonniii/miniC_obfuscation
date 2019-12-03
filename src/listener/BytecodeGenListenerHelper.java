@@ -62,14 +62,17 @@ public class BytecodeGenListenerHelper {
     }
 
     // <information extraction>
-    static String getStackSize(Fun_declContext ctx) {
-        return "32";
-    }
+  //  static String getStackSize(Fun_declContext ctx) {
+   //     return "32";
+   // }
 
-    static String getLocalVarSize(Fun_declContext ctx) {
-        return "32";
-    }
+   // static String getLocalVarSize(Fun_declContext ctx) {
+   //     return "32";
+   // }
 
+    static int getLocalVarSize(SymbolTable symbolTable) {
+        return symbolTable.get_lsymbolCount();
+    }
     static String getTypeText(Type_specContext typespec) {
     	if(typespec.VOID() != null)
     		return "V";
