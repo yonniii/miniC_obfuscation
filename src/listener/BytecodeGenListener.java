@@ -30,7 +30,7 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
             symbolTable.putLocalVar("args", Type.INTARRAY);
         } else { //main이 아닌 경우
             symbolTable.putFunSpecStr(ctx); //함수의 선언부?를 bytecode로 하여 테이블에 담는 함수 실행
-            params = (MiniCParser.ParamsContext) ctx.getChild(3);
+            params = (ParamsContext) ctx.getChild(3);
             symbolTable.putParams(params); //파라미터를 테이블에 넣는 함수 실행
         }
     }
