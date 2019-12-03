@@ -186,5 +186,7 @@ public class SymbolTable {
         sname += getVarId(ctx.IDENT().getText());
         return sname;
     }
-
+    public int get_lsymbolCount(){
+        return _lsymtable.size();
+    }
 }
