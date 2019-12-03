@@ -279,6 +279,8 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
                     stacksize = Math.max(stacksize, tempstack);
                     tempstack = stacksize;
                     expr += "iload " + symbolTable.getVarId(idName) + " \n";
+                }else if(symbolTable.getVarType(idName) == Type.INTARRAY){
+                    expr += "aload " + symbolTable.getVarId(idName) + " \n";
                 }
                 //else	// Type int array => Later! skip now..
                 //	expr += "           lda " + symbolTable.get(ctx.IDENT().getText()).value + " \n";
