@@ -7,8 +7,8 @@ public class BytecodeGenListenerHelper {
 
     // <boolean functions>
 
-    static boolean isFunDecl(MiniCParser.ProgramContext ctx, int i) {
-        return ctx.getChild(i).getChild(0) instanceof MiniCParser.Fun_declContext;
+    static boolean isFunDecl(ProgramContext ctx, int i) {
+        return ctx.getChild(i).getChild(0) instanceof Fun_declContext;
     }
 
     // type_spec IDENT '[' ']'
@@ -52,12 +52,12 @@ public class BytecodeGenListenerHelper {
         	return false;
     }
 
-    static boolean isIntReturn(MiniCParser.Return_stmtContext ctx) {
+    static boolean isIntReturn(Return_stmtContext ctx) {
         return ctx.getChildCount() == 3;
     }
 
 
-    static boolean isVoidReturn(MiniCParser.Return_stmtContext ctx) {
+    static boolean isVoidReturn(Return_stmtContext ctx) {
         return ctx.getChildCount() == 2;
     }
 
@@ -87,7 +87,7 @@ public class BytecodeGenListenerHelper {
         String typeText = "";
 
         for (int i = 0; i < params.param().size(); i++) {
-            MiniCParser.Type_specContext typespec = (MiniCParser.Type_specContext) params.param(i).getChild(0);
+            Type_specContext typespec = (Type_specContext) params.param(i).getChild(0);
             typeText += getTypeText(typespec); // + ";";
         }
         return typeText;
