@@ -16,7 +16,8 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
 
     int tab = 0;
     int label = 0;
-
+    int stacksize = 0;
+    int tempstack = 0;
     // program	: decl+
 
     @Override
@@ -48,6 +49,7 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
         } else { // simple decl
             symbolTable.putGlobalVar(varName, Type.INT);
         }
+
     }
 
 
@@ -156,14 +158,17 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
         }
         endF += ".end method\n"; //함수의 마지막 부분
         newTexts.put(ctx, fHeader + compStmt + endF);
+        stacksize = 0;
+        tempstack = 0;
     }
 
 
     private String funcHeader(MiniCParser.Fun_declContext ctx, String fname) {
         return ".method public static " + symbolTable.getFunSpecStr(fname) + "\n"
-                + "\t" + ".limit stack " + getStackSize(ctx) + "\n"
-                + "\t" + ".limit locals " + getLocalVarSize(ctx) + "\n";
-
+                + "\t" + ".limit stack " + stacksize + "\n"
+                + "\t" + ".limit locals " + getLocalVarSize(symbolTable) + "\n";
+                //  + "\t" + ".limit stack " + getStackSize(ctx) + "\n"
+        //                + "\t" + ".limit locals " + getLocalVarSize(ctx) + "\n";
     }
 
 
@@ -266,11 +271,17 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
             if (ctx.IDENT() != null) {
                 String idName = ctx.IDENT().getText();
                 if (symbolTable.getVarType(idName) == Type.INT) {
+                    tempstack += 1;
+                    stacksize = Math.max(stacksize, tempstack);
+                    tempstack = stacksize;
                     expr += "iload " + symbolTable.getVarId(idName) + " \n";
                 }
                 //else	// Type int array => Later! skip now..
                 //	expr += "           lda " + symbolTable.get(ctx.IDENT().getText()).value + " \n";
             } else if (ctx.LITERAL() != null) {
+                tempstack += 1;
+                stacksize = Math.max(stacksize, tempstack);
+                tempstack = stacksize;
                 String literalStr = ctx.LITERAL().getText();
                 expr += "ldc " + literalStr + " \n";
             }
@@ -278,6 +289,7 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
             expr = handleUnaryExpr(ctx, expr);
             if (ctx.getChild(0).getText().equals("++") || ctx.getChild(0).getText().equals("--")) { // ++, --인 경우 istore해야 하므로 해당 코드 추가함
                 expr += "istore " + symbolTable.getVarId(ctx.expr(0).getText()) + " \n";
+                tempstack -= 1;
             }
 //            expr = handleUnaryExpr(ctx, newTexts.get(ctx) + expr);
         } else if (ctx.getChildCount() == 3) {
@@ -287,6 +299,7 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
             } else if (ctx.getChild(1).getText().equals("=")) {    // IDENT '=' expr
                 expr = newTexts.get(ctx.expr(0))
                         + "istore " + symbolTable.getVarId(ctx.IDENT().getText()) + " \n";
+                tempstack -= 1;
 
             } else {                                            // binary operation
                 expr = handleBinExpr(ctx, expr);
@@ -430,6 +443,7 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
                 break;
 
         }
+        tempstack -= 1;
         return expr;
     }
 
