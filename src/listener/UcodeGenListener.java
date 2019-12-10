@@ -277,11 +277,11 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
                 if (symbolTable.getVarType(idName) == Type.INT) {
                     tempstack += 1;
                     stacksize = Math.max(stacksize, tempstack);
-                    expr += "iload " + symbolTable.getVarId(idName) + " \n";
-                }else if(symbolTable.getVarType(idName) == Type.INTARRAY){
+                    expr += "lod " + symbolTable.getVarId(idName) + " \n";
+                } else if (symbolTable.getVarType(idName) == Type.INTARRAY) {
                     tempstack += 1;
                     stacksize = Math.max(stacksize, tempstack);
-                    expr += "aload " + symbolTable.getVarId(idName) + " \n";
+                    expr += "lda " + symbolTable.getVarId(idName) + " \n";
                 }
                 //else	// Type int array => Later! skip now..
                 //	expr += "           lda " + symbolTable.get(ctx.IDENT().getText()).value + " \n";
@@ -294,7 +294,7 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
         } else if (ctx.getChildCount() == 2) { // UnaryOperation
             expr = handleUnaryExpr(ctx, expr);
             if (ctx.getChild(0).getText().equals("++") || ctx.getChild(0).getText().equals("--")) { // ++, --인 경우 istore해야 하므로 해당 코드 추가함
-                expr += "istore " + symbolTable.getVarId(ctx.expr(0).getText()) + " \n";
+                expr += "lod " +  newTexts.get(ctx.expr(0)) + " \n";
                 tempstack -= 1;
             }
 //            expr = handleUnaryExpr(ctx, newTexts.get(ctx) + expr);
@@ -303,8 +303,8 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
                 expr = newTexts.get(ctx.expr(0));
 
             } else if (ctx.getChild(1).getText().equals("=")) {    // IDENT '=' expr
-                expr = newTexts.get(ctx.expr(0))
-                        + "istore " + symbolTable.getVarId(ctx.IDENT().getText()) + " \n";
+                expr = newTexts.get(ctx.expr(0)) + "\n"
+                        + "str " + symbolTable.getVarId(ctx.IDENT().getText()) + " \n";
                 tempstack -= 1;
 
             } else {                                            // binary operation
@@ -318,15 +318,16 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
                 expr = handleFunCall(ctx, expr);
             } else { // expr
                 expr = handleArray(ctx, expr);
-                expr+= "iaload\n";
-                tempstack -=1;
+                expr += "ldi\n";
+                tempstack -= 1;
             }
         }
         // IDENT '[' expr ']' '=' expr
         else { // Arrays: TODO			*/
             expr = handleArray(ctx, expr)
-                    +newTexts.get(ctx.expr(1))
-                    +"iastore\n";
+                    + newTexts.get(ctx.expr(1)) +
+                    System.lineSeparator()
+                    + "sti\n";
             tempstack -= 3;
         }
         newTexts.put(ctx, expr);
@@ -336,8 +337,9 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
         tempstack += 1;
         stacksize = Math.max(stacksize, tempstack);
         String index = newTexts.get(ctx.expr(0));
-        expr += "aload "+ symbolTable.getVarId(ctx.IDENT().getText())+"\n"
-                +index;
+        String id = ctx.IDENT().getText();
+        expr += index + System.lineSeparator() + "lod " + symbolTable.getVarId(id) + "\n"
+                + "add" + "\n";
 
         return expr;
     }
@@ -346,26 +348,20 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
         String l1 = symbolTable.newLabel();
         String l2 = symbolTable.newLabel();
         String lend = symbolTable.newLabel();
-
-        expr += newTexts.get(ctx.expr(0));
+        String s1 = newTexts.get(ctx.expr(0));
+        expr += s1;
         switch (ctx.getChild(0).getText()) {
             case "-":
-                expr += "ineg \n";
+                expr += "neg \n";
                 break;
             case "--":
-                expr += "ldc 1" + "\n"
-                        + "isub" + "\n";
+                expr += "dec" + "\n" + "str" + s1 ;
                 break;
             case "++":
-                expr += "ldc 1" + "\n"
-                        + "iadd" + "\n";
+                expr += "inc" + "\n" + "str" + s1 ;
                 break;
             case "!":
-                expr += "ifeq " + l2 + "\n"
-                        + l1 + ": " + "ldc 0" + "\n"
-                        + "goto " + lend + "\n"
-                        + l2 + ": " + "ldc 1" + "\n"
-                        + lend + ": " + "\n";
+                expr += "notop";
                 break;
         }
         return expr;
@@ -381,19 +377,19 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
 
         switch (ctx.getChild(1).getText()) {
             case "*":
-                expr += "imul \n";
+                expr += "mult \n";
                 break;
             case "/":
-                expr += "idiv \n";
+                expr += "div \n";
                 break;
             case "%":
-                expr += "irem \n";
+                expr += "mod \n";
                 break;
             case "+":        // expr(0) expr(1) iadd
-                expr += "iadd \n";
+                expr += "add \n";
                 break;
             case "-":
-                expr += "isub \n";
+                expr += "sub \n";
                 break;
 //            case "==":
 //                expr += "if_cmpne ";
@@ -402,65 +398,31 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
 //                expr += "if_cmpeq ";
 //                break;
             case "==":
-                expr += "isub " + "\n"
-                        + "ifeq " + l2 + "\n"
-                        + "ldc 0" + "\n"
-                        + "goto " + lend + "\n"
-                        + l2 + ": \n" + "ldc 1" + "\n"
-                        + lend + ": " + "\n";
+                expr += "eq";
                 break;
             case "!=":
-                expr += "isub " + "\n"
-                        + "ifne " + l2 + "\n"
-                        + "ldc 0" + "\n"
-                        + "goto " + lend + "\n"
-                        + l2 + ": \n" + "ldc 1" + "\n"
-                        + lend + ": " + "\n";
+                expr += "ne";
                 break;
             case "<=": // 뺐을 때 0보다 작거나 같은 경우
-                expr += "isub " + "\n"
-                        + "ifle " + l2 + "\n"
-                        + "ldc 0" + "\n"
-                        + "goto " + lend + "\n"
-                        + l2 + ": \n" + "ldc 1" + "\n"
-                        + lend + ": " + "\n";
+                expr += "le";
                 break;
             case "<": //뺐을 때 0보다 작은 경우
-                expr += "isub " + "\n"
-                        + "iflt " + l2 + "\n"
-                        + "ldc 0" + "\n"
-                        + "goto " + lend + "\n"
-                        + l2 + ": \n" + "ldc 1" + "\n"
-                        + lend + ": " + "\n";
+                expr += "lt";
                 break;
 
             case ">=": // 뺏을 때 0보다 크거나 같은 경우
-                expr += "isub " + "\n"
-                        + "ifge " + l2 + "\n"
-                        + "ldc 0" + "\n"
-                        + "goto " + lend + "\n"
-                        + l2 + ": \n" + "ldc 1" + "\n"
-                        + lend + ": " + "\n";
+                expr += "ge";
                 break;
 
             case ">": //뺐을 때 0보다 큰 경우
-                expr += "isub " + "\n"
-                        + "ifgt " + l2 + "\n"
-                        + "ldc 0" + "\n"
-                        + "goto " + lend + "\n"
-                        + l2 + ": \n" + "ldc 1" + "\n"
-                        + lend + ": " + "\n";
+                expr += "gt";
                 break;
 
             case "and":
-                expr += "ifne " + lend + "\n"
-                        + "pop" + "\n" + "ldc 0" + "\n"
-                        + lend + ": " + "\n";
+                expr += "and";
                 break;
             case "or":
-                expr += "ifeq " + lend + "\n" //0이라면  lend로
-                        + "pop" + "\n" + "ldc 1" + "\n" //0이 아니라면 pop하고 1을 스택에
-                        + lend + ": " + "\n";
+                expr += "or";
                 break;
 
         }
@@ -470,14 +432,14 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
 
     private String handleFunCall(MiniCParser.ExprContext ctx, String expr) {
         String fname = getFunName(ctx);
-
+        String s1 = newTexts.get(ctx.args());
         if (fname.equals("_print")) {        // System.out.println
+            // TODO : ucode에서 print문 어떻게 할지 확인
             expr = "getstatic java/lang/System/out Ljava/io/PrintStream; " + "\n"
                     + newTexts.get(ctx.args())
                     + "invokevirtual " + symbolTable.getFunSpecStr("_print") + "\n";
         } else {
-            expr = newTexts.get(ctx.args())
-                    + "invokestatic " + getCurrentClassName() + "/" + symbolTable.getFunSpecStr(fname) + "\n";
+            expr += "ldp\n" + s1 + "\n" + "call" + fname + "\n";
         }
 
         return expr;
