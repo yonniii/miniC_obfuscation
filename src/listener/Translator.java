@@ -49,8 +49,8 @@ public class Translator {
 //				System.out.println("-------------------");
 //				walker.walk(new BytecodeGenListner_y(), tree );
 				break;
-//			case UCODEGEN:
-//				walker.walk(new UCodeGenListener(), tree );
+			case UCODEGEN:
+				walker.walk(new UcodeGenListener(), tree );
 //				break;
 			default:
 				break;
