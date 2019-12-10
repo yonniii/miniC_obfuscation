@@ -254,9 +254,9 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
         String stmt = "";
         if (isIntReturn(ctx)) { // int return인 경우
             String expr = newTexts.get(ctx.expr()); // 리턴할 expr을 받아옴
-            stmt += expr + "ireturn \n"; // expr과 함께 리턴
+            stmt += expr + "    retv \n"; // expr과 함께 리턴
         } else if (isVoidReturn(ctx)) {
-            stmt += "return \n"; //리턴문 추가
+            stmt += "    ret \n"; //리턴문 추가
         }
         newTexts.put(ctx, stmt);
     }
