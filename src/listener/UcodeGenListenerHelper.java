@@ -69,7 +69,7 @@ public class UcodeGenListenerHelper {
     //     return "32";
     // }
 
-    static int getLocalVarSize(SymbolTable symbolTable) {
+    static int getLocalVarSize(UcodeSymbolTable symbolTable) {
         return symbolTable.get_lsymbolCount();
     }
 
@@ -121,13 +121,8 @@ public class UcodeGenListenerHelper {
 
     static String getFunProlog() {
         String init =
-                ".class public " + getCurrentClassName() + "\n" +
-                        ".super java/lang/Object\n" +
-                        ".method public <init>()V\n" +
-                        "aload_0\n" +
-                        "invokenonvirtual java/lang/Object/<init>()V\n" +
-                        "return\n" +
-                        ".end method" + "\n";
+                "    bgn 0 \n" +
+                        "    ldp \n"+"    call main \n"+"    end\n";
         return init;
     }
 
