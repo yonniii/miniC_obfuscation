@@ -277,9 +277,10 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
                 if (symbolTable.getVarType(idName) == Type.INT) {
                     tempstack += 1;
                     stacksize = Math.max(stacksize, tempstack);
-                    tempstack = stacksize;
                     expr += "iload " + symbolTable.getVarId(idName) + " \n";
                 }else if(symbolTable.getVarType(idName) == Type.INTARRAY){
+                    tempstack += 1;
+                    stacksize = Math.max(stacksize, tempstack);
                     expr += "aload " + symbolTable.getVarId(idName) + " \n";
                 }
                 //else	// Type int array => Later! skip now..
@@ -287,7 +288,6 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
             } else if (ctx.LITERAL() != null) {
                 tempstack += 1;
                 stacksize = Math.max(stacksize, tempstack);
-                tempstack = stacksize;
                 String literalStr = ctx.LITERAL().getText();
                 expr += "ldc " + literalStr + " \n";
             }
@@ -319,6 +319,7 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
             } else { // expr
                 expr = handleArray(ctx, expr);
                 expr+= "iaload\n";
+                tempstack -=1;
             }
         }
         // IDENT '[' expr ']' '=' expr
@@ -326,11 +327,14 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
             expr = handleArray(ctx, expr)
                     +newTexts.get(ctx.expr(1))
                     +"iastore\n";
+            tempstack -= 3;
         }
         newTexts.put(ctx, expr);
     }
 
     private String handleArray(MiniCParser.ExprContext ctx, String expr){
+        tempstack += 1;
+        stacksize = Math.max(stacksize, tempstack);
         String index = newTexts.get(ctx.expr(0));
         expr += "aload "+ symbolTable.getVarId(ctx.IDENT().getText())+"\n"
                 +index;
