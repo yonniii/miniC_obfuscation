@@ -6,18 +6,18 @@ import generated.MiniCParser.ParamsContext;
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 
-import static listener.BytecodeGenListenerHelper.*;
-import static listener.SymbolTable.Type;
+import static listener.UcodeGenListenerHelper.*;
+import static listener.UcodeSymbolTable.Type;
 
 public class UcodeGenListener extends MiniCBaseListener implements ParseTreeListener{
 
     ParseTreeProperty<String> newTexts = new ParseTreeProperty<String>();
-    SymbolTable symbolTable = new SymbolTable();
-
+    UcodeSymbolTable symbolTable = new UcodeSymbolTable();
     int tab = 0;
     int label = 0;
     int stacksize = 0;
     int tempstack = 0;
+    String first_global = "";
     // program	: decl+
 
     @Override
@@ -78,7 +78,7 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
                 var_decl += newTexts.get(ctx.decl(i));
         }
 
-        newTexts.put(ctx, classProlog + var_decl + fun_decl);
+        newTexts.put(ctx, var_decl + fun_decl+ classProlog);
 
         System.out.println(newTexts.get(ctx));
     }
