@@ -18,6 +18,7 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
     int stacksize = 0;
     int tempstack = 0;
     String first_global = "";
+    int labelnum = 0;
     // program	: decl+
 
     @Override
@@ -224,24 +225,20 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
         String stmt = "";
         String condExpr = newTexts.get(ctx.expr());
         String thenStmt = newTexts.get(ctx.stmt(0));
-
-        String lend = symbolTable.newLabel();
-        String lelse = symbolTable.newLabel();
-
-
+        int label1 = labelnum++;
+        int label2 = labelnum++;
         if (noElse(ctx)) {
-            stmt += condExpr + "\n"
-                    + "ifeq " + lend + "\n"
-                    + thenStmt + "\n"
-                    + lend + ":" + "\n";
+            stmt += condExpr + "\n" + "    "+"fjp $$"+label1+"\n"
+                    +thenStmt+"\n"
+                    +"$$"+label1+" nop";
         } else {
             String elseStmt = newTexts.get(ctx.stmt(1));
-            stmt += condExpr + "\n"
-                    + "ifeq " + lelse + "\n"
-                    + thenStmt + "\n"
-                    + "goto " + lend + "\n"
-                    + lelse + ": " + elseStmt + "\n"
-                    + lend + ":" + "\n";
+            stmt += condExpr + "\n" + "    "+"fjp $$"+label2+"\n"
+                    +thenStmt+"\n"
+                    +"    ujp"+label2+"\n"
+                    +label2+" nop"+"\n"
+                    +elseStmt+"\n"
+                    +"$$"+labelnum+" nop";
         }
 
         newTexts.put(ctx, stmt);
