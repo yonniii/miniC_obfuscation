@@ -137,8 +137,8 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
         String lLoop = symbolTable.newLabel(); // 되돌아갈 라벨
         String  lBreak = symbolTable.newLabel(); // 조건에 만족하지 않을 때 빠져나갈 라벨
 
-        stmt += lLoop + "  nop" + "\n" //먼저 되돌아갈 라벨을 명시하여 되돌아왔을 때 조건검사 하도록 함
-                + condExpr // 조건 검사 실행
+        stmt += lLoop + "\tnop" + "\n" //먼저 되돌아갈 라벨을 명시하여 되돌아왔을 때 조건검사 하도록 함
+                + condExpr+"\n" // 조건 검사 실행
                 + "fjp " + lBreak + "\n" //조건 검사 결과가 0이라면 빠져나감
                 + loopStmt // 조건검사 결과가 0이 아닌 경우 실행할 stmt
                 + "ujp " + lLoop + "\n" // 다시 조건 검사를 하도록 loop라벨로 돌아감
@@ -246,14 +246,14 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
         int label1 = labelnum++;
         int label2 = labelnum++;
         if (noElse(ctx)) {
-            stmt += condExpr + "\n" + "    "+"fjp $$"+label1+"\n"
+            stmt += condExpr + "\n" +"\tfjp $$"+label1+"\n"
                     +thenStmt+"\n"
                     +"$$"+label1+" nop";
         } else {
             String elseStmt = newTexts.get(ctx.stmt(1));
-            stmt += condExpr + "\n" + "    "+"fjp $$"+label2+"\n"
+            stmt += condExpr + "\n" +"\tfjp $$"+label2+"\n"
                     +thenStmt+"\n"
-                    +"    ujp"+label2+"\n"
+                    +"\tujp"+label2+"\n"
                     +label2+" nop"+"\n"
                     +elseStmt+"\n"
                     +"$$"+labelnum+" nop";
