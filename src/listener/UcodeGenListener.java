@@ -136,14 +136,15 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
         String loopStmt = newTexts.get(ctx.stmt()); // 반복할 stmt
 
         String lLoop = symbolTable.newLabel(); // 되돌아갈 라벨
-        String lBreak = symbolTable.newLabel(); // 조건에 만족하지 않을 때 빠져나갈 라벨
+        String  lBreak = symbolTable.newLabel(); // 조건에 만족하지 않을 때 빠져나갈 라벨
 
-        stmt += lLoop + ":" + "\n" //먼저 되돌아갈 라벨을 명시하여 되돌아왔을 때 조건검사 하도록 함
+        stmt += lLoop + "  nop" + "\n" //먼저 되돌아갈 라벨을 명시하여 되돌아왔을 때 조건검사 하도록 함
                 + condExpr // 조건 검사 실행
-                + "ifeq " + lBreak + "\n" //조건 검사 결과가 0이라면 빠져나감
+                + "fjp " + lBreak + "\n" //조건 검사 결과가 0이라면 빠져나감
                 + loopStmt // 조건검사 결과가 0이 아닌 경우 실행할 stmt
-                + "goto " + lLoop + "\n" // 다시 조건 검사를 하도록 loop라벨로 돌아감
-                + lBreak + ":" + "\n"; //조건 검사 결과가 0일 때 빠져나갈 라벨
+                + "ujp " + lLoop + "\n" // 다시 조건 검사를 하도록 loop라벨로 돌아감
+                + lBreak + "  nop" + "\n"
+                +"ret\n" + "end\n";//조건 검사 결과가 0일 때 빠져나갈 라벨
 
         newTexts.put(ctx, stmt);
     }
