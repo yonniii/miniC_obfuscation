@@ -178,6 +178,20 @@ public class UcodeSymbolTable {
         return Type.ERROR;
     }
 
+    int getVarBase(String name) {
+        VarInfo lvar = (VarInfo) _lsymtable.get(name);
+        if (lvar != null) {
+            return 2;
+        }
+
+        VarInfo gvar = (VarInfo) _gsymtable.get(name);
+        if (gvar != null) {
+            return 1;
+        }
+
+        return 1;
+    }
+
     String newLabel() {
         return "label" + _labelID++;
     }
