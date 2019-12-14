@@ -13,11 +13,8 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
 
     ParseTreeProperty<String> newTexts = new ParseTreeProperty<String>();
     UcodeSymbolTable symbolTable = new UcodeSymbolTable();
-    int tab = 0;
-    int label = 0;
     int stacksize = 0;
     int tempstack = 0;
-    String first_global = "";
     int labelnum = 0;
     // program	: decl+
 
@@ -68,7 +65,7 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
 
     @Override
     public void exitProgram(MiniCParser.ProgramContext ctx) {
-        String classProlog = getFunProlog();
+        String classProlog = getFunProlog(symbolTable.get_gsymbolCount());
 
         String fun_decl = "", var_decl = "";
 

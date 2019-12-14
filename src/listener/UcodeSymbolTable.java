@@ -193,5 +193,6 @@ public class UcodeSymbolTable {
     public int get_lsymbolCount(){
         return _lsymtable.size();
     }
+    public int get_gsymbolCount() {return _gsymtable.size();}
 }
 

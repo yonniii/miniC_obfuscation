@@ -119,9 +119,9 @@ public class UcodeGenListenerHelper {
         return ctx.getChildCount() <= 5;
     }
 
-    static String getFunProlog() {
+    static String getFunProlog(int size) {
         String init =
-                "    bgn 0 \n" +
+                "    bgn "+size+" \n" +
                         "    ldp \n"+"    call main \n"+"    end\n";
         return init;
     }
