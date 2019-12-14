@@ -449,9 +449,9 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
         String s1 = newTexts.get(ctx.args());
         if (fname.equals("_print")) {        // System.out.println
             // TODO : ucode에서 print문 어떻게 할지 확인
-            expr = "getstatic java/lang/System/out Ljava/io/PrintStream; " + "\n"
+            expr = "ldp" + "\n"
                     + newTexts.get(ctx.args())
-                    + "invokevirtual " + symbolTable.getFunSpecStr("_print") + "\n";
+                    + "call Println" + "\n";
         } else {
             expr += "ldp\n" + s1 + "\n" + "call" + fname + "\n";
         }
