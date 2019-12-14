@@ -165,7 +165,7 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
 
 
     private String funcHeader(MiniCParser.Fun_declContext ctx, String fname) {
-        return fname + "  proc"+symbolTable.get_lsymbolCount()+"2 2 \n";
+        return fname + "  proc "+symbolTable.get_lsymbolCount()+"2 2 \n";
         //  + "\t" + ".limit stack " + getStackSize(ctx) + "\n"
         //                + "\t" + ".limit locals " + getLocalVarSize(ctx) + "\n";
     }
