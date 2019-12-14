@@ -201,8 +201,10 @@ public class UcodeSymbolTable {
         return sname;
     }
     public int get_lsymbolCount(){
-        return _lsymtable.size();
+        return _localVarID;
     }
-    public int get_gsymbolCount() {return _gsymtable.size();}
+    public int get_gsymbolCount() {
+        return _globalVarID;
+    }
 }
 
