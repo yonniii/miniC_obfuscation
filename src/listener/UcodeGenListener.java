@@ -145,7 +145,7 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
 
         newTexts.put(ctx, stmt);
     }
-
+    // type_spec IDENT '(' params ')' compound_stmt ;
     @Override
     public void exitFun_decl(MiniCParser.Fun_declContext ctx) {
 //        symbolTable.putFunSpecStr(ctx);
@@ -153,9 +153,9 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
         String compStmt = newTexts.get(ctx.compound_stmt()); // stmt부분을 가져옴
         String endF = "";
         if (isVoidF(ctx) && ctx.compound_stmt().stmt(ctx.compound_stmt().stmt().size() - 1).return_stmt() == null) { //void인 경우 return문이 없을 때 return 하는 코드 추가
-            endF += "return\n";
+            endF += "   ret\n";
         }
-        endF += ".end method\n"; //함수의 마지막 부분
+        endF += "   end\n"; //함수의 마지막 부분
         newTexts.put(ctx, fHeader + compStmt + endF);
         stacksize = 0;
         tempstack = 0;
@@ -163,9 +163,7 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
 
 
     private String funcHeader(MiniCParser.Fun_declContext ctx, String fname) {
-        return ".method public static " + symbolTable.getFunSpecStr(fname) + "\n"
-                + "\t" + ".limit stack " + stacksize + "\n"
-                + "\t" + ".limit locals " + getLocalVarSize(symbolTable) + "\n";
+        return fname + "  proc"+symbolTable.get_lsymbolCount()+"2 2 \n";
         //  + "\t" + ".limit stack " + getStackSize(ctx) + "\n"
         //                + "\t" + ".limit locals " + getLocalVarSize(ctx) + "\n";
     }
