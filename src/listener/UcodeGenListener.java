@@ -210,12 +210,12 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
         String literal = ctx.LITERAL().getText();
 
         if (isDeclWithInit(ctx)) {
-            varDecl += String.format("sym 2 %s 1", symbolTable.getVarId(varName));
+            varDecl += String.format("sym\t2\t%s\t1\n", symbolTable.getVarId(varName));
             // v. initialization => Later! skip now..:
         }else if(isArrayDecl(ctx)){
-            varDecl += String.format("sym 2 %s %s", symbolTable.getVarId(varName), literal);
+            varDecl += String.format("sym\t2\t%s\t%s\n", symbolTable.getVarId(varName), literal);
         }else {
-            varDecl += String.format("sym 2 %s 1", symbolTable.getVarId(varName));
+            varDecl += String.format("sym\t2\t%s\t1\n", symbolTable.getVarId(varName));
         }
         newTexts.put(ctx, varDecl);
     }
@@ -453,7 +453,7 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
                     + newTexts.get(ctx.args())
                     + "call Println" + "\n";
         } else {
-            expr += "ldp\n" + s1 + "\n" + "call" + fname + "\n";
+            expr += "ldp\n" + s1 + "\n" + "call " + fname + "\n";
         }
 
         return expr;
