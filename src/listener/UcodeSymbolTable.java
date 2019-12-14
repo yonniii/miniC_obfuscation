@@ -64,6 +64,16 @@ public class UcodeSymbolTable {
         _lsymtable.put(varname, new VarInfo(type, _localVarID++)); //id변수의 숫자를 1 증가시킴
     }
 
+    void putLocalVarWithSize(String varname, Type type, int offset) { // 로컬 변수 테이블에 변수를 저장하는 함수
+        _lsymtable.put(varname, new VarInfo(type, _localVarID)); //id변수의 숫자를 1 증가시킴
+        _localVarID += offset;
+    }
+
+    void putGlobalVarWithSize(String varname, Type type, int offset) { // 글로벌 변수 테이블에 변수를 저장하는 함수
+        _gsymtable.put(varname, new VarInfo(type, _globalVarID)); //id변수의 숫자를 1 증가시킴
+        _globalVarID += offset;
+    }
+
     void putGlobalVar(String varname, Type type) { // 글로벌 변수 테이블에 변수를 저장하는 함수
         _gsymtable.put(varname, new VarInfo(type, _globalVarID++)); //id변수의 숫자를 1 증가시킴
     }

@@ -41,7 +41,8 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
         String varName = ctx.IDENT().getText();
 
         if (isArrayDecl(ctx)) {
-            symbolTable.putGlobalVar(varName, Type.INTARRAY);
+            String literal = ctx.LITERAL().getText();
+            symbolTable.putGlobalVarWithSize(varName, Type.INTARRAY, Integer.parseInt(literal));
         } else if (isDeclWithInit(ctx)) {
             symbolTable.putGlobalVarWithInitVal(varName, Type.INT, initVal(ctx));
         } else { // simple decl
@@ -54,7 +55,8 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
     @Override
     public void enterLocal_decl(MiniCParser.Local_declContext ctx) {
         if (isArrayDecl(ctx)) {
-            symbolTable.putLocalVar(getLocalVarName(ctx), Type.INTARRAY);
+            String literal = ctx.LITERAL().getText();
+            symbolTable.putLocalVarWithSize(getLocalVarName(ctx), Type.INTARRAY, Integer.parseInt(literal));
         } else if (isDeclWithInit(ctx)) {
             symbolTable.putLocalVarWithInitVal(getLocalVarName(ctx), Type.INT, initVal(ctx));
         } else { // simple decl
@@ -173,10 +175,17 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
     public void exitVar_decl(MiniCParser.Var_declContext ctx) {
         String varName = ctx.IDENT().getText();
         String varDecl = "";
+        String literal = ctx.LITERAL().getText();
 
         if (isDeclWithInit(ctx)) {
-            varDecl += "putfield " + varName + "\n";
+            varDecl += String.format("sym\t1\t%s\t1\n", symbolTable.getVarId(varName));
+            varDecl+= String.format("ldc\t%s\n",literal);
+            varDecl+= String.format("str\t%s\n",symbolTable.getVarId(varName));
             // v. initialization => Later! skip now..:
+        }else if(isArrayDecl(ctx)){
+            varDecl += String.format("sym 1 %s %s\n", symbolTable.getVarId(varName), literal);
+        }else {
+            varDecl += String.format("sym 1 %s 1\n", symbolTable.getVarId(varName));
         }
         newTexts.put(ctx, varDecl);
     }
@@ -184,17 +193,29 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
 
     @Override
     public void exitLocal_decl(MiniCParser.Local_declContext ctx) {
+//        String varDecl = "";
+//
+//        if (isDeclWithInit(ctx)) {
+//            String vId = symbolTable.getVarId(ctx);
+//            varDecl += "ldc " + ctx.LITERAL().getText() + "\n"
+//                    + "istore " + vId + "\n";
+//        }else if(isArrayDecl(ctx)) {
+//            String vId = symbolTable.getVarId(ctx);
+//            varDecl += "ldc " + ctx.LITERAL().getText() + "\n"
+//                    + "newarray int\n" +
+//                    "astore " + vId + "\n";
+//        }
+        String varName = ctx.IDENT().getText();
         String varDecl = "";
+        String literal = ctx.LITERAL().getText();
 
         if (isDeclWithInit(ctx)) {
-            String vId = symbolTable.getVarId(ctx);
-            varDecl += "ldc " + ctx.LITERAL().getText() + "\n"
-                    + "istore " + vId + "\n";
-        }else if(isArrayDecl(ctx)) {
-            String vId = symbolTable.getVarId(ctx);
-            varDecl += "ldc " + ctx.LITERAL().getText() + "\n"
-                    + "newarray int\n" +
-                    "astore " + vId + "\n";
+            varDecl += String.format("sym 2 %s 1", symbolTable.getVarId(varName));
+            // v. initialization => Later! skip now..:
+        }else if(isArrayDecl(ctx)){
+            varDecl += String.format("sym 2 %s %s", symbolTable.getVarId(varName), literal);
+        }else {
+            varDecl += String.format("sym 2 %s 1", symbolTable.getVarId(varName));
         }
         newTexts.put(ctx, varDecl);
     }
