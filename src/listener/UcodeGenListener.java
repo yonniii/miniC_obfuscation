@@ -211,7 +211,8 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
 
         if (isDeclWithInit(ctx)) {
             varDecl += String.format("sym\t2\t%s\t1\n", symbolTable.getVarId(varName));
-            // v. initialization => Later! skip now..:
+            varDecl += String.format("ldc\t%s\n",literal);
+            varDecl += String.format("str\t%s\n",symbolTable.getVarId(varName));
         }else if(isArrayDecl(ctx)){
             varDecl += String.format("sym\t2\t%s\t%s\n", symbolTable.getVarId(varName), literal);
         }else {
