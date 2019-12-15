@@ -121,8 +121,8 @@ public class UcodeGenListenerHelper {
 
     static String getFunProlog(int size) {
         String init =
-                "    bgn "+size+" \n" +
-                        "    ldp \n"+"    call main \n"+"    end\n";
+                "\t\tbgn "+size+" \n" +
+                        "\t\tldp \n"+"\t\tcall main \n"+"\t\tend\n";
         return init;
     }
 

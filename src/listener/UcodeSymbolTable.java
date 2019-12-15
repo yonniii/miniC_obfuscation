@@ -44,7 +44,7 @@ public class UcodeSymbolTable {
 
 
     private int _globalVarID = 0;
-    private int _localVarID = 0;
+    private int _localVarID = 1;
     private int _labelID = 0;
     private int _tempVarID = 0;
 
@@ -55,7 +55,7 @@ public class UcodeSymbolTable {
 
     void initFunDecl() {        // at each func decl
         _lsymtable.clear();
-        _localVarID = 0;
+        _localVarID = 1;
         _labelID = 0;
         _tempVarID = 32;
     }
@@ -153,12 +153,12 @@ public class UcodeSymbolTable {
     String getVarId(String name) {
         VarInfo lvar = (VarInfo) _lsymtable.get(name);
         if (lvar != null) {
-            return Integer.toString(lvar.id);
+            return "2\t"+Integer.toString(lvar.id);
         }
 
         VarInfo gvar = (VarInfo) _gsymtable.get(name);
         if (gvar != null) {
-            return Integer.toString(gvar.id);
+            return "1\t"+Integer.toString(gvar.id);
         }
 
         return null;
@@ -179,7 +179,7 @@ public class UcodeSymbolTable {
     }
 
     String newLabel() {
-        return "label" + _labelID++;
+        return "$$" + _labelID++;
     }
 
     String newTempVar() {
@@ -201,7 +201,7 @@ public class UcodeSymbolTable {
         return sname;
     }
     public int get_lsymbolCount(){
-        return _localVarID;
+        return _localVarID-1;
     }
     public int get_gsymbolCount() {
         return _globalVarID;
