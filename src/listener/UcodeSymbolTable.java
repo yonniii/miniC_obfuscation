@@ -179,7 +179,7 @@ public class UcodeSymbolTable {
     }
 
     String newLabel() {
-        return "label" + _labelID++;
+        return "$$" + _labelID++;
     }
 
     String newTempVar() {
