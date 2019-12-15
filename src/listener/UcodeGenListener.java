@@ -356,7 +356,7 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
         String index = newTexts.get(ctx.expr(0));
         String id = ctx.IDENT().getText();
         expr += String.format("\t\tldc\t%s\n", index);
-        expr += String.format("\t\tlda\t%s\t%s\n", symbolTable.getVarBase(id), symbolTable.getVarId(id));
+        expr += String.format("\t\tlda\t%s\n", symbolTable.getVarId(id));
         expr += String.format("\t\tadd\n");
 
         return expr;
