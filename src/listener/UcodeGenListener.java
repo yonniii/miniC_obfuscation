@@ -311,7 +311,7 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
         } else if (ctx.getChildCount() == 2) { // UnaryOperation
             expr = handleUnaryExpr(ctx, expr);
             if (ctx.getChild(0).getText().equals("++") || ctx.getChild(0).getText().equals("--")) { // ++, --인 경우 istore해야 하므로 해당 코드 추가함
-                expr += "lod " +  newTexts.get(ctx.expr(0)) + " \n";
+                expr += "\t\tstr " +  symbolTable.getVarId(ctx.expr(0).getText()) + " \n";
                 tempstack -= 1;
             }
 //            expr = handleUnaryExpr(ctx, newTexts.get(ctx) + expr);
@@ -373,10 +373,10 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
                 expr += "neg \n";
                 break;
             case "--":
-                expr += "dec" + "\n" + "str" + s1 ;
+                expr += "\t\tdec" + "\n" ;
                 break;
             case "++":
-                expr += "inc" + "\n" + "str" + s1 ;
+                expr += "\t\tinc" + "\n";
                 break;
             case "!":
                 expr += "notop";
