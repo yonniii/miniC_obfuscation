@@ -252,6 +252,7 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
                     +"\t\tfjp\t$$"+label1+"\n"
                     +thenStmt+"\n"
                     +"$$"+label1+"\t\tnop\n";
+
         } else {
             String elseStmt = newTexts.get(ctx.stmt(1));
             stmt += condExpr + "\n"
