@@ -26,7 +26,7 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
         ParamsContext params;
 
         if (fname.equals("main")) { //함수가 main인 경우, args 파라미터를 테이블에 삽입
-            symbolTable.putLocalVar("args", Type.INTARRAY);
+//            symbolTable.putLocalVar("args", Type.INTARRAY);
         } else { //main이 아닌 경우
             symbolTable.putFunSpecStr(ctx); //함수의 선언부?를 bytecode로 하여 테이블에 담는 함수 실행
             params = (ParamsContext) ctx.getChild(3);
@@ -175,17 +175,18 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
     public void exitVar_decl(MiniCParser.Var_declContext ctx) {
         String varName = ctx.IDENT().getText();
         String varDecl = "";
-        String literal = ctx.LITERAL().getText();
 
         if (isDeclWithInit(ctx)) {
-            varDecl += String.format("sym\t1\t%s\t1\n", symbolTable.getVarId(varName));
-            varDecl+= String.format("ldc\t%s\n",literal);
-            varDecl+= String.format("str\t%s\n",symbolTable.getVarId(varName));
+            String literal = ctx.LITERAL().getText();
+            varDecl += String.format("\t\tsym\t%s\t1\n", symbolTable.getVarId(varName));
+            varDecl+= String.format("\t\tldc\t%s\n",literal);
+            varDecl+= String.format("\t\tstr\t%s\n",symbolTable.getVarId(varName));
             // v. initialization => Later! skip now..:
         }else if(isArrayDecl(ctx)){
-            varDecl += String.format("sym 1 %s %s\n", symbolTable.getVarId(varName), literal);
+            String literal = ctx.LITERAL().getText();
+            varDecl += String.format("\t\tsym\t%s\t%s\n", symbolTable.getVarId(varName), literal);
         }else {
-            varDecl += String.format("sym 1 %s 1\n", symbolTable.getVarId(varName));
+            varDecl += String.format("\t\tsym\t%s\t1\n", symbolTable.getVarId(varName));
         }
         newTexts.put(ctx, varDecl);
     }
@@ -207,16 +208,17 @@ public class UcodeGenListener extends MiniCBaseListener implements ParseTreeList
 //        }
         String varName = ctx.IDENT().getText();
         String varDecl = "";
-        String literal = ctx.LITERAL().getText();
 
         if (isDeclWithInit(ctx)) {
-            varDecl += String.format("sym\t2\t%s\t1\n", symbolTable.getVarId(varName));
-            varDecl += String.format("ldc\t%s\n",literal);
-            varDecl += String.format("str\t%s\n",symbolTable.getVarId(varName));
+            String literal = ctx.LITERAL().getText();
+            varDecl += String.format("\t\tsym\t%s\t1\n", symbolTable.getVarId(varName));
+            varDecl += String.format("\t\tldc\t%s\n",literal);
+            varDecl += String.format("\t\tstr\t%s\n",symbolTable.getVarId(varName));
         }else if(isArrayDecl(ctx)){
-            varDecl += String.format("sym\t2\t%s\t%s\n", symbolTable.getVarId(varName), literal);
+            String literal = ctx.LITERAL().getText();
+            varDecl += String.format("\t\tsym\t%s\t%s\n", symbolTable.getVarId(varName), literal);
         }else {
-            varDecl += String.format("sym\t2\t%s\t1\n", symbolTable.getVarId(varName));
+            varDecl += String.format("\t\tsym\t%s\t1\n", symbolTable.getVarId(varName));
         }
         newTexts.put(ctx, varDecl);
     }
