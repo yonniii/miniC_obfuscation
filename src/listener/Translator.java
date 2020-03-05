@@ -14,8 +14,8 @@ public class Translator {
 	}
 	private static OPTIONS getOption(String[] args){
 		if (args.length < 1)
-			return OPTIONS.UCODEGEN;
-		
+			return OPTIONS.PRETTYPRINT;
+
 		if (args[0].startsWith("-p") 
 				|| args[0].startsWith("-P"))
 			return OPTIONS.PRETTYPRINT;
@@ -41,7 +41,7 @@ public class Translator {
 		
 		ParseTreeWalker walker = new ParseTreeWalker();
 		switch (getOption(args)) {
-			case PRETTYPRINT : 		
+			case PRETTYPRINT :
 				walker.walk(new MiniCPrintListener(), tree );
 				break;
 			case BYTECODEGEN:
