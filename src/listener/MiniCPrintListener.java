@@ -4,7 +4,34 @@ import generated.*;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+
 public class MiniCPrintListener extends MiniCBaseListener {
+
+    class Var {
+        String id;
+        String type;
+        int index;
+
+        public Var(String id, String type, int index) {
+            this.id = id;
+            this.type = type;
+            this.index = index;
+        }
+
+        public int getIndex() {
+            return index;
+        }
+
+        @Override
+        public String toString() {
+            return (type + " " + id + " " + index);
+        }
+    }
+    ArrayList<Var> localVars;
+    HashMap<String, String> newVar;
+
     ParseTreeProperty<String> newTexts = new ParseTreeProperty<String>();
     int depth = 0;
     int ifDepth = 0;
@@ -36,6 +63,7 @@ public class MiniCPrintListener extends MiniCBaseListener {
         int childCount = ctx.getChildCount();
         type = newTexts.get(ctx.type_spec()); //newtexts로부터 typeSpec을 받아옴
         id = ctx.IDENT().getText(); //Terminal Ident를 받아옴
+        localVars.add(new Var(id, type, localVars.size()));
         if (childCount == 3) { //자식이 3개라면 다음과 같이 삽입
             newTexts.put(ctx, type + " " + id + ";\n");
         } else if (childCount == 5) { //자식이 5개라며 다음과 같이 삽입
@@ -58,7 +86,9 @@ public class MiniCPrintListener extends MiniCBaseListener {
     }
     @Override
     public void enterFun_decl(MiniCParser.Fun_declContext ctx) {
-        depth =1; // funDecl의 depth는 1부터 시작
+        depth = 1; // funDecl의 depth는 1부터 시작
+        localVars = new ArrayList<Var>();
+        newVar = new HashMap<>();
     }
     @Override
     public void exitFun_decl(MiniCParser.Fun_declContext ctx) {
@@ -99,6 +129,8 @@ public class MiniCPrintListener extends MiniCBaseListener {
         String id = ctx.IDENT().getText(); //typespec과 ident받아옴
         if (ctx.getChildCount() == 2) { //각각의 경우에 맞게 삽입
             newTexts.put(ctx, type + " " + id);
+            newVar.put(id, "temp_"+id);
+            localVars.add(new Var("temp_"+id, type, localVars.size()));
         } else {
             newTexts.put(ctx, type + " " + id + "[]");
         }
@@ -155,7 +187,7 @@ public class MiniCPrintListener extends MiniCBaseListener {
     }
 
     private boolean isBracket(MiniCParser.ExprContext ctx) { //괄호인지 판단
-        return ctx.getChildCount() == 3 && ctx.getChild(1) == ctx.expr();
+        return "(".equals(ctx.getChild(0).getText());
     }
 
     @Override
@@ -163,21 +195,22 @@ public class MiniCPrintListener extends MiniCBaseListener {
         String s1 = "", s2 = "", op = "";
         if (isIdOp(ctx)) { //ident가 가장 먼저오는 규칙일 때
             if (ctx.getChildCount() == 1) {
-                newTexts.put(ctx, ctx.IDENT().getText());
+                newTexts.put(ctx, getVarId(ctx.IDENT().getText()));
             } else if (ctx.getChildCount() == 3) {
-                s1 = ctx.IDENT().getText();
+                s1 = getVarId(ctx.IDENT().getText());
                 s2 = newTexts.get(ctx.expr(0));
                 newTexts.put(ctx, s1 + " = " + s2);
             } else if (ctx.getChildCount() == 4) {
-                s1 = ctx.IDENT().getText();
+                s1 = getVarId(ctx.IDENT().getText());
                 if (ctx.getChild(2) == ctx.expr()) {
                     s2 = newTexts.get(ctx.expr(0));
+                    newTexts.put(ctx, s1 + "[" + s2 + "]");
                 } else {
                     s2 = newTexts.get(ctx.args());
+                    newTexts.put(ctx, s1 + "(" + s2 + ")");
                 }
-                newTexts.put(ctx, s1 + ctx.getChild(1).getText() + s2 + ctx.getChild(3).getText());
             } else {
-                s1 = ctx.IDENT().getText();
+                s1 = getVarId(ctx.IDENT().getText());
                 s2 = newTexts.get(ctx.expr(0));
                 String s3 = newTexts.get(ctx.expr(1));
                 newTexts.put(ctx, s1 + ctx.getChild(1).getText() + s2 +
@@ -207,7 +240,9 @@ public class MiniCPrintListener extends MiniCBaseListener {
     @Override
     public void enterWhile_stmt(MiniCParser.While_stmtContext ctx) { //while 에 들어갈 때
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < depth -1; i++) { //while(~~)를 put하기 전에 공백을 삽입한다
+        if(getVarIndex("temp_while")!= -1)
+            localVars.add(new Var("temp_while","int",localVars.size()));
+        for (int i = 0; i < depth - 1; i++) { //while(~~)를 put하기 전에 공백을 삽입한다
             sb.append("....");
         }
         newTexts.put(ctx, sb.toString());
@@ -223,7 +258,9 @@ public class MiniCPrintListener extends MiniCBaseListener {
         if(! (ctx.stmt().getChild(0) instanceof MiniCParser.Compound_stmtContext )){ //괄호로 둘러쌓인 compound stmt가 아닌 경우 괄호 추가하는 메소드실행
             stmt = addWS(stmt);
         }
-        newTexts.put(ctx,  whle + " (" + expt + ")"+stmt);
+
+        String obfus = String.format("temp_while = 0;\n");
+        newTexts.put(ctx, whle + " (" + expt + ")" +stmt);
     }
 
     @Override
@@ -234,24 +271,39 @@ public class MiniCPrintListener extends MiniCBaseListener {
         } //공백을 삽입하고 괄호와 개행을 알맞게 삽입하여 newtexts에 삽입한다.
         stmt.append("{\n");
         int localCnt = 0;
-        for (int i = 1; i < ctx.getChildCount() - 1; i++) {
-            if (ctx.getChild(i).getChildCount() != 1) {
-                for (int j = 0; j < depth; j++) {
-                    stmt.append("....");
-                }
-                stmt.append(newTexts.get(ctx.local_decl(localCnt++)));
-            } else {
-                for (int j = 0; j < depth; j++) {
-                    stmt.append("....");
-                }
-                stmt.append( newTexts.get(ctx.stmt(i - localCnt - 1)));
+        for (int i=0; i<ctx.local_decl().size(); i++){
+            for (int j = 0; j < depth; j++) {
+                stmt.append("....");
+            }
+            stmt.append(newTexts.get(ctx.local_decl(i)));
+        }
+        StringBuilder decl = new StringBuilder();
+        StringBuilder forLoop = new StringBuilder();
+        newVar.forEach((key,value) -> {
+            decl.append(String.format("\t%s %s = 0;\n",getVarType(key),value));
+            forLoop.append(String.format("\tfor (int i = 0; i < %s; i++)\n\t\t%s++;\n",key,value));
+        });
+        stmt.append(decl.toString());
+        stmt.append(forLoop.toString());
+        for (int i = 0; i < ctx.stmt().size(); i++) {
+            for (int j = 0; j < depth; j++) {
+                stmt.append("....");
             }
         }
-        for (int i = 0; i < depth -1; i++) {
-            stmt.append("....");
-        }
+//        for (int i = 0; i < depth -1; i++) {
+//            stmt.append("....");
+//        }
         stmt.append("}\n");
         newTexts.put(ctx, stmt.toString());
+    }
+
+    public String opaqueObfus(int stmtCnt){
+        if(stmtCnt < 3){
+
+        }else{
+
+        }
+        return "";
     }
 
     @Override
@@ -364,6 +416,43 @@ public class MiniCPrintListener extends MiniCBaseListener {
 //    @Override
 //    public void visitTerminal(TerminalNode node) {
 //    }
+
+    public String getVarId(String id){
+        if(newVar.containsKey(id)){
+            id = newVar.get(id);
+        }
+        for (Var i : localVars) {
+            if (id.equals(i.id)) {
+                return i.id;
+            }
+        }
+        return id;
+    }
+
+    public String getVarType(String id){
+        if(newVar.containsKey(id)){
+            id = newVar.get(id);
+        }
+        for (Var i : localVars) {
+            if (id.equals(i.id)) {
+                return i.type;
+            }
+        }
+        return null;
+    }
+
+    public int getVarIndex(String id) {
+        if(newVar.containsKey(id)){
+            id = newVar.get(id);
+        }
+        for (Var i : localVars) {
+            if (id.equals(i.id)) {
+                return i.index;
+            }
+        }
+        return -1;
+    }
+
 
 
     @Override
