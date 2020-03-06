@@ -277,6 +277,7 @@ public class MiniCPrintListener extends MiniCBaseListener {
             }
             stmt.append(newTexts.get(ctx.local_decl(i)));
         }
+        stmt.append("int p, q;");
         StringBuilder decl = new StringBuilder();
         StringBuilder forLoop = new StringBuilder();
         newVar.forEach((key,value) -> {
@@ -297,11 +298,22 @@ public class MiniCPrintListener extends MiniCBaseListener {
         newTexts.put(ctx, stmt.toString());
     }
 
-    public String opaqueObfus(int stmtCnt){
+    public String opaqueObfus(int stmtCnt, MiniCParser.Compound_stmtContext ctx){
+        StringBuilder stmt = new StringBuilder();
         if(stmtCnt < 3){
 
         }else{
+            stmt.append("p = rand() % 2\n" +
+                    "q = (p+1) % 2\n" +
+                    "if(p){\n");
+            for (int i = 0; i < stmtCnt / 2; i++) {
+                
+            }
+            stmt.append("} else{ \n");
+            for (int i = stmtCnt / 2 ; i < stmtCnt; i++) {
 
+            }
+            stmt.append("}\n");
         }
         return "";
     }
