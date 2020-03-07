@@ -261,7 +261,7 @@ public class MiniCPrintListener extends MiniCBaseListener {
         if(getVarIndex("temp_while")!= -1)
             localVars.add(new Var("temp_while","int",localVars.size()));
         for (int i = 0; i < depth - 1; i++) { //while(~~)를 put하기 전에 공백을 삽입한다
-            sb.append("....");
+            sb.append("\t");
         }
         newTexts.put(ctx, sb.toString());
 
@@ -285,13 +285,13 @@ public class MiniCPrintListener extends MiniCBaseListener {
     public void exitCompound_stmt(MiniCParser.Compound_stmtContext ctx) { //compound stmt인 경우
         StringBuilder stmt = new StringBuilder("\n") ;
         for (int i = 0; i < depth -1; i++) {
-            stmt.append("...."); // depth에 맞게 공백 append
+            stmt.append("\t"); // depth에 맞게 공백 append
         } //공백을 삽입하고 괄호와 개행을 알맞게 삽입하여 newtexts에 삽입한다.
         stmt.append("{\n");
         int localCnt = 0;
         for (int i=0; i<ctx.local_decl().size(); i++){
             for (int j = 0; j < depth; j++) {
-                stmt.append("....");
+                stmt.append("\t");
             }
             stmt.append(newTexts.get(ctx.local_decl(i)));
         }
@@ -346,7 +346,8 @@ public class MiniCPrintListener extends MiniCBaseListener {
             for (int i = (stmtCnt / 2) +1; i < stmtCnt; i++) {
                 stmt.append("\t\t"+newTexts.get(ctx.stmt(i)));
             }
-            stmt.append("}\n");
+            stmt.append("\t}\n");
+
         }
         return stmt.toString();
     }
@@ -373,7 +374,7 @@ public class MiniCPrintListener extends MiniCBaseListener {
     public void enterIf_stmt(MiniCParser.If_stmtContext ctx) { //if stmt에 들어갈 경우
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < depth -1; i++) { //depth에 맞게 공백을 삽입한다
-            sb.append("....");
+            sb.append("\t");
         }
         ifDepth = depth; //else를 위해서 depth를 저장해둠
         newTexts.put(ctx, sb.toString()); //공백을 put
@@ -386,22 +387,22 @@ public class MiniCPrintListener extends MiniCBaseListener {
         String expr = newTexts.get(ctx.expr());
         String stmt1 = newTexts.get(ctx.stmt(0));
         StringBuilder sb = new StringBuilder();
-        if(! (ctx.stmt(0).getChild(0) instanceof MiniCParser.Compound_stmtContext )){
-            stmt1 = addWS(stmt1); //compound stmt가 아닌 경우 공백과 괄호 삽입하는 메소드 호출
-        }
+//        if(! (ctx.stmt(0).getChild(0) instanceof MiniCParser.Compound_stmtContext )){
+//            stmt1 = addWS(stmt1); //compound stmt가 아닌 경우 공백과 괄호 삽입하는 메소드 호출
+//        }
         if (ctx.getChildCount() == 5) { //각각 규칙에 맞게 삽입
             sb.append(iif + " (" + expr + ")" + stmt1);
             newTexts.put(ctx, sb.toString());
         } else {
             String eelse = ctx.ELSE().getText();
             String stmt2 = newTexts.get(ctx.stmt(1));
-            if(! (ctx.stmt(1).getChild(0) instanceof MiniCParser.Compound_stmtContext ) ){
-                stmt2 = addWS(stmt2);
-            }
+//            if(! (ctx.stmt(1).getChild(0) instanceof MiniCParser.Compound_stmtContext ) ){
+//                stmt2 = addWS(stmt2);
+//            }
 
             sb.append(iif + " (" + expr + ")" + stmt1 );
             for (int i = 0; i < ifDepth; i++) { //else에 대하여 공백 삽입하는 과정
-                sb.append("....");
+                sb.append("\t");
             }
             sb.append(eelse + stmt2);
             newTexts.put(ctx, sb.toString());
@@ -412,15 +413,15 @@ public class MiniCPrintListener extends MiniCBaseListener {
         StringBuilder sb = new StringBuilder();
         sb.append("\n");
         for (int i = 0; i < depth; i++) {
-            sb.append("....");
+            sb.append("\t");
         }
         sb.append("{\n");
         for (int i = 0; i < depth +1; i++) {
-            sb.append("....");
+            sb.append("\t");
         }
         sb.append(stmt);
         for (int i = 0; i < depth; i++) {
-            sb.append("....");
+            sb.append("\t");
         }
         sb.append("}\n");
         return sb.toString();
