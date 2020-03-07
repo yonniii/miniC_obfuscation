@@ -137,38 +137,56 @@ public class MiniCPrintListener extends MiniCBaseListener {
     }
 
 
+//    @Override
+//    public void exitStmt(MiniCParser.StmtContext ctx) { //stmt를 빠져나오며
+//
+//        if (ctx.getChild(0) == ctx.expr_stmt()) { //각각의 경우에 맞게  stmt를 받아와서 put
+//            newTexts.put(ctx, newTexts.get(ctx.expr_stmt()));
+//        } else if (ctx.getChild(0) == ctx.compound_stmt()) {
+//            newTexts.put(ctx, newTexts.get(ctx.compound_stmt()));
+//            depth--; // compoundstmt를 빠져나오면 depth를 감소시킴
+//        } else if (ctx.getChild(0) == ctx.if_stmt()) {
+//            newTexts.put(ctx, newTexts.get(ctx.if_stmt()));
+//        } else if (ctx.getChild(0) == ctx.while_stmt()) {
+//            newTexts.put(ctx, newTexts.get(ctx.while_stmt()));
+//        } else if (ctx.getChild(0) == ctx.return_stmt()) {
+//            newTexts.put(ctx, newTexts.get(ctx.return_stmt()));
+//        }
+//
+//    }
+//
+//    @Override
+//    public void enterStmt(MiniCParser.StmtContext ctx) { //stmt를 들어가며. depth를 증가시키기 위해
+//        if (ctx.getChild(0) == ctx.expr_stmt()) {
+//            newTexts.put(ctx, ctx.expr_stmt().getText());
+//        } else if (ctx.getChild(0) == ctx.compound_stmt()) {
+//            depth++; // compoundstmt일 땐 depth를 증가시킨다.
+//            newTexts.put(ctx, ctx.compound_stmt().getText());
+//        } else if (ctx.getChild(0) == ctx.if_stmt()) {
+//            newTexts.put(ctx, ctx.if_stmt().getText());
+//        } else if (ctx.getChild(0) == ctx.while_stmt()) {
+//            newTexts.put(ctx, ctx.while_stmt().getText());
+//        } else if (ctx.getChild(0) == ctx.return_stmt()) {
+//            newTexts.put(ctx, ctx.return_stmt().getText());
+//        }
+//    }
+
     @Override
-    public void exitStmt(MiniCParser.StmtContext ctx) { //stmt를 빠져나오며
-
-        if (ctx.getChild(0) == ctx.expr_stmt()) { //각각의 경우에 맞게  stmt를 받아와서 put
-            newTexts.put(ctx, newTexts.get(ctx.expr_stmt()));
-        } else if (ctx.getChild(0) == ctx.compound_stmt()) {
-            newTexts.put(ctx, newTexts.get(ctx.compound_stmt()));
-            depth--; // compoundstmt를 빠져나오면 depth를 감소시킴
-        } else if (ctx.getChild(0) == ctx.if_stmt()) {
-            newTexts.put(ctx, newTexts.get(ctx.if_stmt()));
-        } else if (ctx.getChild(0) == ctx.while_stmt()) {
-            newTexts.put(ctx, newTexts.get(ctx.while_stmt()));
-        } else if (ctx.getChild(0) == ctx.return_stmt()) {
-            newTexts.put(ctx, newTexts.get(ctx.return_stmt()));
+    public void exitStmt(MiniCParser.StmtContext ctx) {
+        String stmt = "";
+        if (ctx.getChildCount() > 0) { //각자 stmt에 맞는 함수를 실행하여 반환된 값을 newText에 넣음.
+            if (ctx.expr_stmt() != null)                // expr_stmt
+                stmt += newTexts.get(ctx.expr_stmt());
+            else if (ctx.compound_stmt() != null)    // compound_stmt
+                stmt += newTexts.get(ctx.compound_stmt());
+            else if (ctx.if_stmt() != null)
+                stmt += newTexts.get(ctx.if_stmt());
+            else if (ctx.while_stmt() != null)
+                stmt += newTexts.get(ctx.while_stmt());
+            else if (ctx.return_stmt() != null)
+                stmt += newTexts.get(ctx.return_stmt());
         }
-
-    }
-
-    @Override
-    public void enterStmt(MiniCParser.StmtContext ctx) { //stmt를 들어가며. depth를 증가시키기 위해
-        if (ctx.getChild(0) == ctx.expr_stmt()) {
-            newTexts.put(ctx, ctx.expr_stmt().getText());
-        } else if (ctx.getChild(0) == ctx.compound_stmt()) {
-            depth++; // compoundstmt일 땐 depth를 증가시킨다.
-            newTexts.put(ctx, ctx.compound_stmt().getText());
-        } else if (ctx.getChild(0) == ctx.if_stmt()) {
-            newTexts.put(ctx, ctx.if_stmt().getText());
-        } else if (ctx.getChild(0) == ctx.while_stmt()) {
-            newTexts.put(ctx, ctx.while_stmt().getText());
-        } else if (ctx.getChild(0) == ctx.return_stmt()) {
-            newTexts.put(ctx, ctx.return_stmt().getText());
-        }
+        newTexts.put(ctx, stmt);
     }
 
     @Override
@@ -255,9 +273,9 @@ public class MiniCPrintListener extends MiniCBaseListener {
 
         String expt = newTexts.get(ctx.expr());
         String stmt = newTexts.get(ctx.stmt());
-        if(! (ctx.stmt().getChild(0) instanceof MiniCParser.Compound_stmtContext )){ //괄호로 둘러쌓인 compound stmt가 아닌 경우 괄호 추가하는 메소드실행
-            stmt = addWS(stmt);
-        }
+//        if(! (ctx.stmt().getChild(0) instanceof MiniCParser.Compound_stmtContext )){ //괄호로 둘러쌓인 compound stmt가 아닌 경우 괄호 추가하는 메소드실행
+//            stmt = addWS(stmt);
+//        }
 
         String obfus = String.format("temp_while = 0;\n");
         newTexts.put(ctx, whle + " (" + expt + ")" +stmt);
@@ -277,7 +295,7 @@ public class MiniCPrintListener extends MiniCBaseListener {
             }
             stmt.append(newTexts.get(ctx.local_decl(i)));
         }
-        stmt.append("int p, q;");
+//        stmt.append("int p, q;");
         StringBuilder decl = new StringBuilder();
         StringBuilder forLoop = new StringBuilder();
         newVar.forEach((key,value) -> {
@@ -286,14 +304,15 @@ public class MiniCPrintListener extends MiniCBaseListener {
         });
         stmt.append(decl.toString());
         stmt.append(forLoop.toString());
-        for (int i = 0; i < ctx.stmt().size(); i++) {
-            for (int j = 0; j < depth; j++) {
-                stmt.append("....");
-            }
-        }
+//        for (int i = 0; i < ctx.stmt().size(); i++) {
+//            for (int j = 0; j < depth; j++) {
+//                stmt.append("....");
+//            }
+//        }
 //        for (int i = 0; i < depth -1; i++) {
 //            stmt.append("....");
 //        }
+        stmt.append(opaqueObfus(ctx.stmt().size(), ctx));
         stmt.append("}\n");
         newTexts.put(ctx, stmt.toString());
     }
@@ -301,21 +320,35 @@ public class MiniCPrintListener extends MiniCBaseListener {
     public String opaqueObfus(int stmtCnt, MiniCParser.Compound_stmtContext ctx){
         StringBuilder stmt = new StringBuilder();
         if(stmtCnt < 3){
-
-        }else{
-            stmt.append("p = rand() % 2\n" +
-                    "q = (p+1) % 2\n" +
-                    "if(p){\n");
-            for (int i = 0; i < stmtCnt / 2; i++) {
-                
+            for (int i = 0; i < ctx.stmt().size(); i++) {
+                stmt.append(newTexts.get(ctx.stmt(i)));
             }
-            stmt.append("} else{ \n");
-            for (int i = stmtCnt / 2 ; i < stmtCnt; i++) {
+        }else{
+            stmt.append("\tint p,q;\n");
+            stmt.append("\tp = rand() % 2\n" +
+                    "\tq = p % 2\n" +
+                    "\tif(p){\n");
+            for (int i = 0; i < stmtCnt / 2; i++) {
+                stmt.append("\t\t"+newTexts.get(ctx.stmt(i)));
+            }
+            stmt.append("\t} else{ \n");
+            for (int i = 0 ; i < (stmtCnt / 2) + 1; i++) {
+                stmt.append("\t\t"+newTexts.get(ctx.stmt(i)));
+            }
+            stmt.append("\t}\n");
 
+
+            stmt.append("\tif(q){\n");
+            for (int i = (stmtCnt / 2) ; i < stmtCnt; i++) {
+                stmt.append("\t\t"+newTexts.get(ctx.stmt(i)));
+            }
+            stmt.append("\t} else{ \n");
+            for (int i = (stmtCnt / 2) +1; i < stmtCnt; i++) {
+                stmt.append("\t\t"+newTexts.get(ctx.stmt(i)));
             }
             stmt.append("}\n");
         }
-        return "";
+        return stmt.toString();
     }
 
     @Override
