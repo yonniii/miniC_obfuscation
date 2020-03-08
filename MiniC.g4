@@ -46,13 +46,8 @@ expr	:  LITERAL
 	| expr '/' expr				 
 	| expr '%' expr				 
 	| expr '+' expr				 
-	| expr '-' expr				 
-	| expr EQ expr				
-	| expr NE expr				 
-	| expr LE expr				 
-	| expr '<' expr				 
-	| expr GE expr				 
-	| expr '>' expr				 
+	| expr '-' expr
+	| expr Compare expr
 	| '!' expr					 
 	| expr AND expr				 
 	| expr OR expr				
@@ -60,6 +55,8 @@ expr	:  LITERAL
 	| IDENT '[' expr ']' '=' expr		;
 args	: expr (',' expr)*			 
 	|					 ;
+
+Compare : EQ | NE | LE | GE | GT | LT;
 
 VOID: 'void';
 INT: 'int';
@@ -74,6 +71,8 @@ LE: '<=';
 GE: '>=';
 EQ: '==';
 NE: '!=';
+GT : '>';
+LT : '<';
 
 IDENT  : [a-zA-Z_]
         (   [a-zA-Z_]
