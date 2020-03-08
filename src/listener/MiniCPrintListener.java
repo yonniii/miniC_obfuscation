@@ -89,6 +89,8 @@ public class MiniCPrintListener extends MiniCBaseListener {
         depth = 1; // funDecl의 depth는 1부터 시작
         localVars = new ArrayList<Var>();
         newVar = new HashMap<>();
+        localVars.add(new Var("p", "int", localVars.size()));
+        localVars.add(new Var("q", "int", localVars.size()));
     }
     @Override
     public void exitFun_decl(MiniCParser.Fun_declContext ctx) {
@@ -200,6 +202,11 @@ public class MiniCPrintListener extends MiniCBaseListener {
                 ctx.getChild(1) != ctx.expr();
     }
 
+    private boolean isCompare(MiniCParser.ExprContext ctx){
+        return ctx.getChildCount() == 3 &&
+                ctx.Compare() != null;
+    }
+
     private boolean isUnaryOp(MiniCParser.ExprContext ctx) { //단항연산인지 판단
         return ctx.getChildCount() == 2;
     }
@@ -208,10 +215,40 @@ public class MiniCPrintListener extends MiniCBaseListener {
         return "(".equals(ctx.getChild(0).getText());
     }
 
+    String x;
+    String contID = null;
+    String contCmp = null;
     @Override
     public void exitExpr(MiniCParser.ExprContext ctx) { //각각의 경우에 맞추어 형식을 맞춰서 newtext에 put
         String s1 = "", s2 = "", op = "";
-        if (isIdOp(ctx)) { //ident가 가장 먼저오는 규칙일 때
+        if(isCompare(ctx)) {
+            if(ctx.parent instanceof MiniCParser.If_stmtContext){
+                if(ctx.expr(0).IDENT() != null || ctx.expr(1).IDENT() != null){
+                    contID = newTexts.get(ctx.expr(0));
+                    x = newTexts.get(ctx.expr(1));
+                    contCmp = ctx.Compare().getText();
+                }
+            }
+            s1 = newTexts.get(ctx.expr(0));
+            s2 = newTexts.get(ctx.expr(1));
+            op = ctx.Compare().getText();
+            newTexts.put(ctx, s1 + " " + op + " " + s2);
+        }else if (isBinaryOperation(ctx)) {
+            s1 = newTexts.get(ctx.expr(0));
+            s2 = newTexts.get(ctx.expr(1));
+            op = ctx.getChild(1).getText();
+            newTexts.put(ctx, s1 + " " + op + " " + s2);
+        }
+        else if (isUnaryOp(ctx)) {
+            op = ctx.getChild(0).getText();
+            s1 = newTexts.get(ctx.expr(0));
+            newTexts.put(ctx, op + s1);
+        } else if (isBracket(ctx)) {
+            s1 = newTexts.get(ctx.expr(0));
+            newTexts.put(ctx, "(" + s1 + ")");
+        } else if (ctx.getChildCount() == 1 && ctx.LITERAL() != null) {
+            newTexts.put(ctx, ctx.LITERAL().getText());
+        }else if (isIdOp(ctx)) { //ident가 가장 먼저오는 규칙일 때
             if (ctx.getChildCount() == 1) {
                 newTexts.put(ctx, getVarId(ctx.IDENT().getText()));
             } else if (ctx.getChildCount() == 3) {
@@ -234,20 +271,6 @@ public class MiniCPrintListener extends MiniCBaseListener {
                 newTexts.put(ctx, s1 + ctx.getChild(1).getText() + s2 +
                         ctx.getChild(3).getText() + ctx.getChild(4).getText() + s3);
             }
-        } else if (isBinaryOperation(ctx)) {
-            s1 = newTexts.get(ctx.expr(0));
-            s2 = newTexts.get(ctx.expr(1));
-            op = ctx.getChild(1).getText();
-            newTexts.put(ctx, s1 + " " + op + " " + s2);
-        } else if (isUnaryOp(ctx)) {
-            op = ctx.getChild(0).getText();
-            s1 = newTexts.get(ctx.expr(0));
-            newTexts.put(ctx, op + s1);
-        } else if (isBracket(ctx)) {
-            s1 = newTexts.get(ctx.expr(0));
-            newTexts.put(ctx, "(" + s1 + ")");
-        } else if (ctx.getChildCount() == 1) {
-            newTexts.put(ctx, ctx.LITERAL().getText());
         }
 
     }
@@ -390,9 +413,14 @@ public class MiniCPrintListener extends MiniCBaseListener {
 //        if(! (ctx.stmt(0).getChild(0) instanceof MiniCParser.Compound_stmtContext )){
 //            stmt1 = addWS(stmt1); //compound stmt가 아닌 경우 공백과 괄호 삽입하는 메소드 호출
 //        }
+        if(contID!=null){
+            String gg = String.format("{\nif(%s*%s +(-1-(%s)) +(-1*-(%s)) %s 0 )" +
+                    "%s\n" +
+                    "}\n",contID,contID,x,x,contCmp, stmt1);
+            stmt1 = gg;
+        }
         if (ctx.getChildCount() == 5) { //각각 규칙에 맞게 삽입
             sb.append(iif + " (" + expr + ")" + stmt1);
-            newTexts.put(ctx, sb.toString());
         } else {
             String eelse = ctx.ELSE().getText();
             String stmt2 = newTexts.get(ctx.stmt(1));
@@ -405,8 +433,11 @@ public class MiniCPrintListener extends MiniCBaseListener {
                 sb.append("\t");
             }
             sb.append(eelse + stmt2);
-            newTexts.put(ctx, sb.toString());
         }
+        newTexts.put(ctx, sb.toString());
+        x = null;
+        contCmp = null;
+        contID = null;
     }
 
     private String addWS(String stmt){ //괄호가 없는 stmt에 대하여 공백과 괄호를 삽입하는 메소드
@@ -454,8 +485,8 @@ public class MiniCPrintListener extends MiniCBaseListener {
             newTexts.put(ctx, args);
         }
     }
-
-//    @Override
+//
+////    @Override
 //    public void exitEveryRule(ParserRuleContext ctx) {
 //    }
 //
